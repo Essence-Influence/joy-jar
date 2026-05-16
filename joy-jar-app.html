@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Joy Jar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #FAF6EF;
+  --warm-white: #FDF9F4;
+  --amber: #E8A44A;
+  --amber-deep: #C4782A;
+  --amber-light: #F5D9A8;
+  --amber-pale: #FDF0DC;
+  --terra: #B85C38;
+  --terra-light: #F0C4B0;
+  --sage: #7A9E7E;
+  --sage-light: #D4E8D6;
+  --plum: #7B4F7C;
+  --plum-light: #DCC8DC;
+  --sky: #4A7FA5;
+  --sky-light: #C8DDF0;
+  --ink: #2C2016;
+  --ink-mid: #5C4A32;
+  --ink-light: #9C8A72;
+  --glass: rgba(250,246,239,0.85);
+  --shadow: 0 4px 24px rgba(44,32,22,0.12);
+  --shadow-lg: 0 12px 48px rgba(44,32,22,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND ── */
+.bg-texture {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(232,164,74,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 80%, rgba(184,92,56,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(122,158,126,0.06) 0%, transparent 70%);
+}
+
+/* ── LAYOUT ── */
+.app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
+
+@media (min-width: 768px) {
+  .app { max-width: 100%; flex-direction: row; padding: 0; gap: 0; }
+  .sidebar { width: 340px; min-width: 340px; height: 100vh; position: sticky; top: 0; border-right: 1px solid rgba(44,32,22,0.1); display: flex; flex-direction: column; padding: 2rem 1.5rem; }
+  .main-panel { flex: 1; height: 100vh; overflow-y: auto; padding: 2rem; }
+}
+
+/* ── HEADER / JAR AREA ── */
+.jar-section { padding: 2rem 1.5rem 1rem; text-align: center; }
+.app-label { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 4px; }
+.app-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--ink); line-height: 1; margin-bottom: 1.5rem; }
+.app-title em { font-style: italic; color: var(--amber-deep); }
+
+/* ── JAR SVG ── */
+.jar-wrap { position: relative; display: inline-block; cursor: pointer; transition: transform .2s; }
+.jar-wrap:hover { transform: scale(1.03); }
+.jar-wrap:active { transform: scale(0.97); }
+.jar-hint { font-size: 11px; color: var(--ink-light); margin-top: 8px; letter-spacing: .05em; }
+
+/* ── FILL LEVEL ── */
+.fill-bar-wrap { margin: 1rem 1.5rem 0; }
+.fill-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-light); margin-bottom: 5px; }
+.fill-track { height: 6px; background: var(--amber-light); border-radius: 3px; overflow: hidden; }
+.fill-progress { height: 100%; background: linear-gradient(90deg, var(--amber), var(--amber-deep)); border-radius: 3px; transition: width .6s cubic-bezier(.34,1.56,.64,1); }
+
+/* ── ADD FORM ── */
+.add-section { margin: 1.25rem 1.5rem 0; }
+.category-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.cat-btn { font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px; border: 1.5px solid transparent; cursor: pointer; transition: all .15s; background: var(--warm-white); color: var(--ink-mid); border-color: rgba(44,32,22,0.15); }
+.cat-btn.active-cat { color: white; border-color: transparent; }
+.cat-btn[data-cat="sensory"].active-cat { background: var(--sage); }
+.cat-btn[data-cat="relational"].active-cat { background: var(--sky); }
+.cat-btn[data-cat="creative"].active-cat { background: var(--plum); }
+.cat-btn[data-cat="transcendent"].active-cat { background: var(--terra); }
+.cat-btn[data-cat="simple"].active-cat { background: var(--amber-deep); }
+
+.input-row { display: flex; gap: 8px; }
+.joy-input {
+  flex: 1; padding: 12px 14px; border-radius: 12px; border: 1.5px solid rgba(44,32,22,0.15);
+  background: var(--warm-white); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+  transition: border-color .15s, box-shadow .15s; outline: none;
+}
+.joy-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(232,164,74,0.15); }
+.joy-input::placeholder { color: var(--ink-light); }
+.add-btn {
+  width: 46px; height: 46px; border-radius: 12px; border: none; background: var(--amber-deep);
+  color: white; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .1s; flex-shrink: 0;
+}
+.add-btn:hover { background: var(--terra); }
+.add-btn:active { transform: scale(0.93); }
+
+/* ── STATS ROW ── */
+.stats-row { display: flex; gap: 10px; margin: 1.25rem 1.5rem 0; }
+.stat { flex: 1; background: var(--warm-white); border: 1px solid rgba(44,32,22,0.08); border-radius: 12px; padding: .75rem; text-align: center; }
+.stat-num { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--ink); }
+.stat-label { font-size: 10px; color: var(--ink-light); letter-spacing: .04em; margin-top: 2px; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 0; margin: 1.5rem 1.5rem 0; border-bottom: 1px solid rgba(44,32,22,0.12); }
+.tab { flex: 1; padding: 8px 4px; font-size: 12px; font-weight: 500; color: var(--ink-light); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all .15s; margin-bottom: -1px; letter-spacing: .03em; }
+.tab.active { color: var(--amber-deep); border-bottom-color: var(--amber-deep); }
+
+/* ── PANELS ── */
+.panel { display: none; padding: 1rem 1.5rem; }
+.panel.active { display: block; }
+
+/* ── JOY SLIPS ── */
+.slips-grid { display: grid; gap: 10px; }
+.slip {
+  background: var(--warm-white); border-radius: 14px; padding: 14px 16px;
+  border-left: 3px solid var(--amber); display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 10px; transition: box-shadow .15s;
+  animation: slip-in .3s cubic-bezier(.34,1.2,.64,1);
+}
+.slip:hover { box-shadow: var(--shadow); }
+@keyframes slip-in { from { opacity:0; transform: translateY(-8px) scale(.97); } to { opacity:1; transform: none; } }
+
+.slip[data-cat="sensory"] { border-left-color: var(--sage); }
+.slip[data-cat="relational"] { border-left-color: var(--sky); }
+.slip[data-cat="creative"] { border-left-color: var(--plum); }
+.slip[data-cat="transcendent"] { border-left-color: var(--terra); }
+.slip[data-cat="simple"] { border-left-color: var(--amber); }
+
+.slip-text { font-size: 14px; color: var(--ink); line-height: 1.5; flex: 1; }
+.slip-meta { font-size: 10px; color: var(--ink-light); margin-top: 4px; }
+.slip-cat { display: inline-block; font-size: 9px; font-weight: 500; padding: 2px 7px; border-radius: 8px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+.slip-cat.sensory { background: var(--sage-light); color: var(--sage); }
+.slip-cat.relational { background: var(--sky-light); color: var(--sky); }
+.slip-cat.creative { background: var(--plum-light); color: var(--plum); }
+.slip-cat.transcendent { background: var(--terra-light); color: var(--terra); }
+.slip-cat.simple { background: var(--amber-light); color: var(--amber-deep); }
+
+.slip-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.slip-btn { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.slip-btn:hover { background: var(--amber-pale); }
+.del-btn:hover { background: #FFE8E8; }
+
+/* ── PULL TAB ── */
+.pull-section { text-align: center; padding: 1.5rem; }
+.pull-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px; border-radius: 50px; border: none;
+  background: var(--ink); color: var(--cream); font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 500; cursor: pointer; transition: all .2s;
+  box-shadow: 0 4px 16px rgba(44,32,22,0.25);
+}
+.pull-btn:hover { background: var(--amber-deep); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(44,32,22,0.3); }
+.pull-btn:active { transform: scale(0.97); }
+.pull-btn:disabled { background: var(--ink-light); cursor: not-allowed; transform: none; box-shadow: none; }
+
+.pulled-slip {
+  margin: 1rem auto; max-width: 340px; background: var(--amber-pale);
+  border: 1px solid var(--amber-light); border-radius: 16px; padding: 1.5rem;
+  text-align: center; animation: slip-in .4s cubic-bezier(.34,1.2,.64,1);
+}
+.pulled-label { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 8px; }
+.pulled-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--ink); line-height: 1.4; margin-bottom: 8px; }
+.pulled-cat-badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 10px; }
+
+/* ── REFLECT TAB ── */
+.reflect-empty { text-align: center; padding: 2rem 1rem; color: var(--ink-light); font-size: 14px; }
+.chart-section { margin-bottom: 1.5rem; }
+.chart-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-light); margin-bottom: 10px; }
+.bar-chart { display: grid; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 90px 1fr 30px; gap: 8px; align-items: center; font-size: 12px; }
+.bar-label { color: var(--ink-mid); text-align: right; }
+.bar-track { height: 10px; background: rgba(44,32,22,0.08); border-radius: 5px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 5px; transition: width .8s cubic-bezier(.34,1,.64,1); }
+.bar-count { color: var(--ink-light); font-size: 11px; }
+
+.streak-card { background: var(--warm-white); border: 1px solid rgba(44,32,22,0.1); border-radius: 14px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.streak-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--amber-pale); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.streak-info { flex: 1; }
+.streak-num { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--ink); }
+.streak-label { font-size: 12px; color: var(--ink-light); }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 3rem 1.5rem; }
+.empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .5; }
+.empty-text { font-size: 14px; color: var(--ink-light); line-height: 1.6; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: var(--cream); font-size: 13px; padding: 10px 20px;
+  border-radius: 20px; z-index: 999; opacity: 0; transition: all .3s; pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--glass); backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(44,32,22,0.1);
+  display: flex; padding: 8px 0 env(safe-area-inset-bottom, 8px);
+}
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px; background: none; border: none; cursor: pointer; transition: all .15s; }
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label { font-size: 9px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-light); }
+.nav-btn.active .nav-label { color: var(--amber-deep); }
+.nav-btn.active .nav-icon { transform: scale(1.15); }
+
+@media (min-width: 768px) {
+  .bottom-nav { display: none; }
+  .sidebar .jar-section { padding: 0 0 1rem; }
+  .sidebar .app-title { font-size: 1.8rem; }
+  .sidebar .jar-wrap svg { width: 160px; height: 200px; }
+  .sidebar .fill-bar-wrap { margin: .75rem 0 0; }
+  .sidebar .add-section { margin: 1rem 0 0; }
+  .sidebar .stats-row { margin: 1rem 0 0; }
+  .sidebar .tabs { margin: 1rem 0 0; }
+  .main-panel .panel { padding: 0; }
+  .desktop-tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(44,32,22,0.12); margin-bottom: 1.5rem; }
+  .desktop-tab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--ink-light); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all .15s; margin-bottom: -1px; }
+  .desktop-tab.active { color: var(--amber-deep); border-bottom-color: var(--amber-deep); }
+  .app { padding: 0; }
+}
+
+/* ── JAR ANIMATION ── */
+@keyframes jiggle { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-3deg)} 40%{transform:rotate(3deg)} 60%{transform:rotate(-2deg)} 80%{transform:rotate(2deg)} }
+.jar-wrap.jiggle { animation: jiggle .4s ease; }
+
+/* ── CONTINUUM ── */
+.continuum-section { margin-bottom: 1.5rem; }
+.spectrum-bar { height: 8px; border-radius: 4px; background: linear-gradient(to right, var(--sage), var(--sky), var(--plum), var(--terra)); margin: 8px 0; }
+.zone-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.zone-pill { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 10px; cursor: pointer; transition: all .15s; }
+.zone-pill[data-z="all"] { background: var(--amber-pale); color: var(--amber-deep); }
+.zone-pill[data-z="sensory"] { background: var(--sage-light); color: var(--sage); }
+.zone-pill[data-z="relational"] { background: var(--sky-light); color: var(--sky); }
+.zone-pill[data-z="creative"] { background: var(--plum-light); color: var(--plum); }
+.zone-pill[data-z="transcendent"] { background: var(--terra-light); color: var(--terra); }
+.zone-pill[data-z="simple"] { background: var(--amber-light); color: var(--amber-deep); }
+.zone-pill.active-filter { outline: 2px solid currentColor; outline-offset: 1px; }
+
+/* ── PROMPT CARD ── */
+.prompt-card { background: var(--amber-pale); border: 1px solid var(--amber-light); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; }
+.prompt-eyebrow { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 6px; }
+.prompt-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.05rem; color: var(--ink); line-height: 1.5; margin-bottom: 10px; }
+.prompt-refresh { font-size: 11px; color: var(--amber-deep); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; padding: 0; }
+.prompt-refresh:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="bg-texture"></div>
+<div class="toast" id="toast"></div>
+
+<!-- MOBILE LAYOUT -->
+<div class="app" id="app-mobile">
+
+  <!-- JAR + ADD + STATS -->
+  <div class="jar-section">
+    <div class="app-label">your personal</div>
+    <div class="app-title">Joy <em>Jar</em></div>
+
+    <div class="jar-wrap" id="jar-wrap" onclick="triggerJarClick()" title="Tap to shake your jar">
+      <svg id="jar-svg" width="200" height="250" viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="jar-clip">
+            <path d="M38 78 Q36 78 35 80 L28 230 Q27 238 35 240 L165 240 Q173 238 172 230 L165 80 Q164 78 162 78 Z"/>
+          </clipPath>
+          <linearGradient id="jar-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
+            <stop offset="40%" stop-color="rgba(255,255,255,0)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0.15)"/>
+          </linearGradient>
+        </defs>
+
+        <!-- jar body -->
+        <path d="M38 78 Q36 78 35 80 L28 230 Q27 238 35 240 L165 240 Q173 238 172 230 L165 80 Q164 78 162 78 Z" fill="#F5EDD8" stroke="#D4B878" stroke-width="1.5"/>
+
+        <!-- fill area (dynamic) -->
+        <g clip-path="url(#jar-clip)">
+          <rect id="jar-fill" x="28" y="240" width="144" height="0" fill="url(#fill-grad)" rx="0"/>
+          <!-- joy slips inside jar -->
+          <g id="jar-slips"></g>
+        </g>
+
+        <!-- glass shine -->
+        <path d="M38 78 Q36 78 35 80 L28 230 Q27 238 35 240 L165 240 Q173 238 172 230 L165 80 Q164 78 162 78 Z" fill="url(#jar-grad)"/>
+
+        <!-- lid -->
+        <rect x="34" y="58" width="132" height="24" rx="8" fill="#D4B878" stroke="#B89040" stroke-width="1"/>
+        <rect x="30" y="72" width="140" height="10" rx="5" fill="#C8A840" stroke="#A88030" stroke-width="1"/>
+
+        <!-- lip ring -->
+        <rect x="32" y="76" width="136" height="6" rx="3" fill="#E8C860" opacity=".6"/>
+
+        <!-- gradient fill def -->
+        <defs>
+          <linearGradient id="fill-grad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#E8A44A"/>
+            <stop offset="100%" stop-color="#F5C870"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="jar-hint">tap to shake ✦</div>
+    </div>
+  </div>
+
+  <div class="fill-bar-wrap">
+    <div class="fill-label"><span>jar fullness</span><span id="fill-pct">0%</span></div>
+    <div class="fill-track"><div class="fill-progress" id="fill-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- ADD JOY -->
+  <div class="add-section">
+    <div class="category-row" id="cat-row">
+      <button class="cat-btn active-cat" data-cat="simple" onclick="selectCat(this)">Simple</button>
+      <button class="cat-btn" data-cat="sensory" onclick="selectCat(this)">Sensory</button>
+      <button class="cat-btn" data-cat="relational" onclick="selectCat(this)">Relational</button>
+      <button class="cat-btn" data-cat="creative" onclick="selectCat(this)">Creative</button>
+      <button class="cat-btn" data-cat="transcendent" onclick="selectCat(this)">Transcendent</button>
+    </div>
+    <div class="input-row">
+      <input class="joy-input" id="joy-input" placeholder="What brought you joy today?" maxlength="120"/>
+      <button class="add-btn" onclick="addJoy()" title="Add to jar">+</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">total joys</div></div>
+    <div class="stat"><div class="stat-num" id="stat-today">0</div><div class="stat-label">today</div></div>
+    <div class="stat"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">day streak</div></div>
+  </div>
+
+  <!-- TABS (mobile) -->
+  <div class="tabs" id="mobile-tabs">
+    <button class="tab active" onclick="switchTab('jar','mobile')">All Joys</button>
+    <button class="tab" onclick="switchTab('pull','mobile')">Pull One</button>
+    <button class="tab" onclick="switchTab('reflect','mobile')">Reflect</button>
+  </div>
+
+  <!-- PANEL: ALL JOYS -->
+  <div class="panel active" id="panel-jar">
+    <div class="continuum-section">
+      <div class="zone-pills" id="filter-pills">
+        <span class="zone-pill active-filter" data-z="all" onclick="filterJoys(this)">All</span>
+        <span class="zone-pill" data-z="simple" onclick="filterJoys(this)">Simple</span>
+        <span class="zone-pill" data-z="sensory" onclick="filterJoys(this)">Sensory</span>
+        <span class="zone-pill" data-z="relational" onclick="filterJoys(this)">Relational</span>
+        <span class="zone-pill" data-z="creative" onclick="filterJoys(this)">Creative</span>
+        <span class="zone-pill" data-z="transcendent" onclick="filterJoys(this)">Transcendent</span>
+      </div>
+    </div>
+    <div class="slips-grid" id="slips-container">
+      <div class="empty-state">
+        <div class="empty-icon">🫙</div>
+        <div class="empty-text">Your jar is waiting.<br>Add your first joy above.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: PULL -->
+  <div class="panel" id="panel-pull">
+    <div class="prompt-card">
+      <div class="prompt-eyebrow">today's reflection prompt</div>
+      <div class="prompt-text" id="daily-prompt">"What small moment today asked nothing of you — and gave everything?"</div>
+      <button class="prompt-refresh" onclick="refreshPrompt()">↻ new prompt</button>
+    </div>
+    <div class="pull-section">
+      <button class="pull-btn" id="pull-btn" onclick="pullSlip()">
+        <span>✦</span> Pull a joy slip
+      </button>
+      <div id="pulled-display"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: REFLECT -->
+  <div class="panel" id="panel-reflect">
+    <div id="reflect-content">
+      <div class="reflect-empty">Add some joys to see your patterns.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="mobileNav('jar', this)">
+    <span class="nav-icon">🫙</span><span class="nav-label">Jar</span>
+  </button>
+  <button class="nav-btn" onclick="mobileNav('pull', this)">
+    <span class="nav-icon">✨</span><span class="nav-label">Pull</span>
+  </button>
+  <button class="nav-btn" onclick="mobileNav('reflect', this)">
+    <span class="nav-icon">📊</span><span class="nav-label">Reflect</span>
+  </button>
+</nav>
+
+<script>
+// ── STATE ──
+var joys = JSON.parse(localStorage.getItem('joys') || '[]');
+var currentCat = 'simple';
+var currentFilter = 'all';
+var pulledIdx = -1;
+
+var prompts = [
+  '"What small moment today asked nothing of you — and gave everything?"',
+  '"What joy did you almost miss because you were moving too fast?"',
+  '"Which joy on your list surprised you the most? Why?"',
+  '"If you could bottle one feeling from this week, what would it be?"',
+  '"What tiny thing made you stop — even briefly — and just be?"',
+  '"Which of your joys would you most want to share with someone you love?"',
+  '"Is there a joy you keep returning to? What does it tell you about yourself?"',
+  '"What joy existed before you named it — and does naming it change it?"'
+];
+var promptIdx = 0;
+
+// ── INIT ──
+function init() {
+  renderSlips();
+  updateJar();
+  updateStats();
+  updateReflect();
+  document.getElementById('joy-input').addEventListener('keydown', function(e){ if(e.key==='Enter') addJoy(); });
+}
+
+// ── ADD JOY ──
+function addJoy() {
+  var input = document.getElementById('joy-input');
+  var text = input.value.trim();
+  if (!text) { input.focus(); showToast('Write something that brought you joy ✦'); return; }
+  var joy = { id: Date.now(), text: text, cat: currentCat, date: new Date().toISOString() };
+  joys.unshift(joy);
+  save();
+  input.value = '';
+  renderSlips();
+  updateJar();
+  updateStats();
+  updateReflect();
+  jiggleJar();
+  showToast('Added to your jar ✦');
+}
+
+function selectCat(btn) {
+  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active-cat'); });
+  btn.classList.add('active-cat');
+  currentCat = btn.dataset.cat;
+}
+
+// ── RENDER SLIPS ──
+function renderSlips() {
+  var container = document.getElementById('slips-container');
+  var filtered = currentFilter === 'all' ? joys : joys.filter(function(j){ return j.cat === currentFilter; });
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🫙</div><div class="empty-text">' + (currentFilter === 'all' ? 'Your jar is waiting.<br>Add your first joy above.' : 'No ' + currentFilter + ' joys yet.') + '</div></div>';
+    return;
+  }
+  container.innerHTML = filtered.map(function(j){
+    var d = new Date(j.date);
+    var dateStr = d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    return '<div class="slip" data-cat="'+j.cat+'" data-id="'+j.id+'">' +
+      '<div class="slip-body">' +
+      '<span class="slip-cat '+j.cat+'">'+j.cat+'</span>' +
+      '<div class="slip-text">'+escHtml(j.text)+'</div>' +
+      '<div class="slip-meta">'+dateStr+'</div>' +
+      '</div>' +
+      '<div class="slip-actions">' +
+      '<button class="slip-btn del-btn" onclick="deleteJoy('+j.id+')" title="Remove">×</button>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function filterJoys(el) {
+  document.querySelectorAll('.zone-pill').forEach(function(p){ p.classList.remove('active-filter'); });
+  el.classList.add('active-filter');
+  currentFilter = el.dataset.z;
+  renderSlips();
+}
+
+// ── DELETE ──
+function deleteJoy(id) {
+  joys = joys.filter(function(j){ return j.id !== id; });
+  save();
+  renderSlips();
+  updateJar();
+  updateStats();
+  updateReflect();
+  showToast('Joy removed');
+}
+
+// ── JAR FILL ──
+function updateJar() {
+  var pct = Math.min(joys.length / 30, 1);
+  var fillHeight = Math.round(pct * 162);
+  var fillY = 240 - fillHeight;
+  var fillEl = document.getElementById('jar-fill');
+  if (fillEl) {
+    fillEl.setAttribute('y', fillY);
+    fillEl.setAttribute('height', fillHeight);
+  }
+  var pctEl = document.getElementById('fill-pct');
+  var barEl = document.getElementById('fill-bar');
+  if (pctEl) pctEl.textContent = Math.round(pct*100)+'%';
+  if (barEl) barEl.style.width = Math.round(pct*100)+'%';
+  renderJarSlips(pct);
+}
+
+function renderJarSlips(pct) {
+  var g = document.getElementById('jar-slips');
+  if (!g) return;
+  var count = Math.min(joys.length, 12);
+  var catColors = { simple:'#F5C870', sensory:'#7A9E7E', relational:'#4A7FA5', creative:'#7B4F7C', transcendent:'#B85C38' };
+  var slips = '';
+  for (var i = 0; i < count; i++) {
+    var j = joys[i] || joys[0];
+    var col = catColors[j.cat] || '#F5C870';
+    var x = 45 + (i % 4) * 30 + Math.sin(i*1.7)*6;
+    var y = 220 - Math.floor(i/4)*28;
+    var rot = (i%2===0?-8:8) + Math.cos(i)*5;
+    slips += '<rect x="'+(x-14)+'" y="'+(y-8)+'" width="28" height="16" rx="3" fill="'+col+'" opacity="0.85" transform="rotate('+rot+' '+x+' '+y+')" />';
+    slips += '<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="7" fill="white" opacity="0.7" transform="rotate('+rot+' '+x+' '+y+')">joy</text>';
+  }
+  g.innerHTML = slips;
+}
+
+function jiggleJar() {
+  var w = document.getElementById('jar-wrap');
+  if (!w) return;
+  w.classList.remove('jiggle');
+  void w.offsetWidth;
+  w.classList.add('jiggle');
+  setTimeout(function(){ w.classList.remove('jiggle'); }, 500);
+}
+
+function triggerJarClick() {
+  jiggleJar();
+  if (joys.length > 0) {
+    var random = joys[Math.floor(Math.random()*joys.length)];
+    showToast('"' + random.text.substring(0,40) + (random.text.length>40?'…':'') + '"');
+  }
+}
+
+// ── STATS ──
+function updateStats() {
+  document.getElementById('stat-total').textContent = joys.length;
+  var today = new Date().toDateString();
+  var todayCount = joys.filter(function(j){ return new Date(j.date).toDateString()===today; }).length;
+  document.getElementById('stat-today').textContent = todayCount;
+  document.getElementById('stat-streak').textContent = calcStreak();
+}
+
+function calcStreak() {
+  if (!joys.length) return 0;
+  var dates = joys.map(function(j){ return new Date(j.date).toDateString(); });
+  var unique = [...new Set(dates)];
+  var streak = 0;
+  var check = new Date();
+  for (var i = 0; i < 365; i++) {
+    if (unique.indexOf(check.toDateString()) > -1) { streak++; check.setDate(check.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+// ── PULL ──
+function pullSlip() {
+  if (!joys.length) { showToast('Add some joys first!'); return; }
+  var idx;
+  do { idx = Math.floor(Math.random()*joys.length); } while (joys.length > 1 && idx === pulledIdx);
+  pulledIdx = idx;
+  var joy = joys[idx];
+  var catColors = { simple:'amber-light', sensory:'sage-light', relational:'sky-light', creative:'plum-light', transcendent:'terra-light' };
+  document.getElementById('pulled-display').innerHTML =
+    '<div class="pulled-slip">' +
+    '<div class="pulled-label">✦ pulled from your jar ✦</div>' +
+    '<div class="pulled-text">' + escHtml(joy.text) + '</div>' +
+    '<span class="slip-cat '+joy.cat+'">' + joy.cat + '</span>' +
+    '</div>';
+  jiggleJar();
+}
+
+// ── PROMPTS ──
+function refreshPrompt() {
+  promptIdx = (promptIdx + 1) % prompts.length;
+  document.getElementById('daily-prompt').textContent = prompts[promptIdx];
+}
+
+// ── REFLECT ──
+function updateReflect() {
+  var el = document.getElementById('reflect-content');
+  if (!el) return;
+  if (!joys.length) { el.innerHTML = '<div class="reflect-empty">Add some joys to see your patterns.</div>'; return; }
+  var cats = { simple:0, sensory:0, relational:0, creative:0, transcendent:0 };
+  var catLabels = { simple:'Simple', sensory:'Sensory', relational:'Relational', creative:'Creative', transcendent:'Transcendent' };
+  var catCols = { simple:'#E8A44A', sensory:'#7A9E7E', relational:'#4A7FA5', creative:'#7B4F7C', transcendent:'#B85C38' };
+  joys.forEach(function(j){ if(cats[j.cat]!==undefined) cats[j.cat]++; });
+  var max = Math.max.apply(null, Object.values(cats)) || 1;
+  var streakNum = calcStreak();
+  var today = new Date().toDateString();
+  var todayCount = joys.filter(function(j){ return new Date(j.date).toDateString()===today; }).length;
+  var bars = Object.keys(cats).map(function(k){
+    var pct = Math.round((cats[k]/max)*100);
+    return '<div class="bar-row"><div class="bar-label">'+catLabels[k]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+catCols[k]+'"></div></div><div class="bar-count">'+cats[k]+'</div></div>';
+  }).join('');
+  el.innerHTML =
+    '<div class="streak-card"><div class="streak-icon">🔥</div><div class="streak-info"><div class="streak-num">'+streakNum+' day'+(streakNum!==1?'s':'')+' </div><div class="streak-label">current streak</div></div></div>' +
+    '<div class="streak-card"><div class="streak-icon">🫙</div><div class="streak-info"><div class="streak-num">'+joys.length+' joys</div><div class="streak-label">in your jar total</div></div></div>' +
+    '<div class="chart-section" style="margin-top:1.25rem"><div class="chart-title">joy by category</div><div class="bar-chart">'+bars+'</div></div>';
+}
+
+// ── TABS ──
+function switchTab(name, scope) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name === 'reflect') updateReflect();
+}
+
+function mobileNav(name, btn) {
+  switchTab(name, 'mobile');
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var tabBtns = document.querySelectorAll('.tab');
+  tabBtns.forEach(function(t){
+    if (t.textContent.toLowerCase().includes(name==='jar'?'all':name)) t.classList.add('active');
+  });
+}
+
+// ── HELPERS ──
+function save() { localStorage.setItem('joys', JSON.stringify(joys)); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+init();
+</script>
+</body>
+</html>
